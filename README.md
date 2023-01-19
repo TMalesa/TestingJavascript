@@ -86,3 +86,197 @@
 * toHaveReturnedWith(value)- to ensure that a mock function returned a specific value
 
 * more mock functions: https://jestjs.io/docs/expect
+
+
+### 3. Test Node.js Backends
+
+* Testing pure functions is one of the nicest things that you can do because pure functions are pretty simple to test
+* to run the test run "npm t"
+
+   Example: Unit Tests for a Simple Pure Function
+   
+             auth.js//file name
+             function isPasswordAllowed(password) {
+             return (
+             password.length > 6 &&
+             // non-alphanumeric
+             /\W/.test(password) &&
+             // digit
+             /\d/.test(password) &&
+             // capital letter
+             /[A-Z]/.test(password) &&
+            // lowercase letter
+            /[a-z]/.test(password)
+            );
+            }
+            
+Example: testing
+
+         auth.exercise.js//test file
+         import { isPasswordAllowed } from "../auth";//import auth function
+         //We'll expect that to be true. It should return true because that's a valid password.
+         test("isPasswordAllowed returns true for valid passwords", () => {
+         expect(isPasswordAllowed("!aBc123")).toBe(true);
+          });
+            //We'll expect that to be false. It should return false because that's a invalid password.
+          test("isPasswordAllowed returns false for invalid passwords", () => {
+          expect(isPasswordAllowed("a2c!")).toBe(false);
+          expect(isPasswordAllowed("123456!")).toBe(false);
+          expect(isPasswordAllowed("ABCdef!")).toBe(false);
+          expect(isPasswordAllowed("abc123!")).toBe(false);
+          expect(isPasswordAllowed("ABC123!")).toBe(false);
+          expect(isPasswordAllowed("ABCdef123")).toBe(false);
+          });
+          
+
+**Improve Error Messages by Generating Test Titles**
+
+* One of the most crucial things you can do when writing tests is ensuring that the error message explains the problem as clearly as possible so it can be addressed quickly
+*  The error message that you will see it will look like you forgot to save this disallow. Now we have this disallows this particular password, makes it a little bit easier to see which one of these is failing. We don't have to look through the stack trays.
+
+Example : testing
+ 
+          auth.exercise.js//test file
+          describe('isPasswordAllowed only allows some passwords', () => {
+          const allowedPasswords = ['!aBc123']
+          const disallowedPasswords = [
+          'a2c!',
+          '123456!',
+          'ABCdef!',
+          'abc123!',
+          'ABC123!',
+          'ABCdef123',
+           ]
+           }
+
+
+         allowedPasswords.forEach(password => {
+         test(`allows ${password}`, () => {
+         expect(isPasswordAllowed(password)).toBe(true);
+         });
+         });
+
+        disallowedPasswords.forEach(password => {
+        test(`disallows ${password}`, () => {
+         expect(isPasswordAllowed(password)).toBe(false);
+         });
+         });
+         
+ **jest-in-case**
+ 
+ * to Reduce Duplication 
+ * import cases from "jest-in-case";
+ 
+ Example: testing using case
+             
+             import cases from 'jest-in-case'
+             import {isPasswordAllowed} from '../auth'
+             cases(
+             "isPasswordAllowed: invalid passwords",
+             options => {
+              expect(isPasswordAllowed(options.password)).toBe(false);
+              },
+              {
+              "too short": {
+              password: "a2c!"
+               },
+              "no letters": {
+               password: "123456!"
+              },
+              "no numbers": {
+              password: "ABCdef!"
+              },
+              "no uppercase letters": {
+              password: "abc123!"
+              },
+             "no lowercase letters": {
+              password: "ABC123!"
+              },
+              "no non-alphanumeric characters": {
+              password: "ABCdef123"
+              }
+              }
+              );
+              
+* This will give us invalid passwords with the clear description for why they're invalid.
+
+**Test Node Middleware**
+
+**different types of middleware that Express has**
+
+* **Application-level** middleware (our app isn't really using this kind)
+* **Router-level** middleware (all our routes use this strategy of middleware)
+* **Error-handling** middleware (this is what error-middleware.js is)
+* **Built-in** middleware (we're not using any of these)
+* **Third-party** middleware (we're using a few of these, like cors, body-parser, express-jwt, and passport).
+
+* The one that we're going to be working with is the error handler, which accepts an error as the first argument, the request as the second response, and then the next function.
+* The purpose of our errorMiddleware is to just catch errors which have happened throughout the app. It's like a fallback.
+
+Function: error-middleware.js 
+       
+        function errorHandler(err, req, res, next) {
+        console.error(err.stack);
+        res.status(500).send("Something broke!");
+        }
+        
+ Function: src/utils/error-middleware.js
+ 
+          function errorMiddleware(error, req, res, next) {
+          if (res.headersSent) {
+          next(error);
+          } else if (error instanceof UnauthorizedError) {
+         res.status(401);
+         res.json({ code: error.code, message: error.message });
+         } else {
+         res.status(500);
+         res.json({
+         message: error.message,
+         // we only add a `stack` property in non-production environments
+         ...(process.env.NODE_ENV === "production" ? null : { stack: error.stack })
+         });
+         }
+         }
+         
+ Testing :error-middleware.exercise.js
+            
+         import {UnauthorizedError} from 'express-jwt'
+         import `errorMiddleware` from '../error-middleware'
+          test("responds with 401 for express-jwt UnauthorizedError", () => {
+          const req = {};
+           const next = jest.fn();
+           const res = { json: `jest`.fn(() => res), status: `jest`.fn(() => res) };
+            const code="some_error_code",
+            const message= "some message"
+            const error = new UnauthorizedError("some_error_code", {message});
+             errorMiddleware(error, req, res, next);
+             expect(next).not.toHaveBeenCalled();
+             expect(res.json).toHaveBeenCalledWith({
+             code:error.code,
+              message: error.message})
+              expect(res.status).toHaveBeenCalledWith(401);
+              expect(res.status).toHaveBeenCalledTimes(1);
+              expect(res.json).toHaveBeenCalledTimes(1);
+              });
+         
+         
+         
+* **Important abouth what we are testing** is that when you call the error middleware with an unauthorised error that the next is not called,the status is called with 401 and is called once,the json is going to be called with the object that has code property that came from the error and the message property that came from the error abd we expect that is only called once.
+
+
+* Unit Test for Handling headersSent in an Error Middleware
+           
+ Testing :error-middleware.exercise.js
+         
+         import `errorMiddleware` from '../error-middleware'
+          test("call next if header is true", () => {
+          const req = {};
+           const next = jest.fn();
+           const res = { json: `jest`.fn(() => res), status: `jest`.fn(() => res), headerset: true};
+            const error = new Error("blah");
+             errorMiddleware(error, req, res, next);
+             expect(next).toHaveBeenCalledWith(error);
+             expect(next).toHaveBeenCalled(1);
+              expect(res.status).not.toHaveBeenCalled();
+              expect(res.json).not.toHaveBeenCalled();
+              });
