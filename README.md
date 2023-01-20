@@ -2,7 +2,7 @@
 
 ### 1.Fundamentals of Testing in JavaScript
 
-* **automated** -is a code that throws an error when the actual result of something does not match the expected output
+* **automated tset** -is a code that throws an error when the actual result of something does not match the expected output
 
 Example: 
 
@@ -119,6 +119,40 @@ forEach.test.js:
   * import the module you want to mock into your test file
   * jest.mock() the module
   * use .MockResolvedValue(<mocked response>) to mock the response
+     
+  Mock API Example:
+     
+          // index.test.js
+         const getFirstAlbumTitle = require("./index");
+         const axios = require("axios");
+     
+         jest.mock("axios");
+
+     
+ * After importing a module and running jest.mock(<module-name>), you have complete control over all functions from that module. You control these functions even if they're called inside another imported function.
+     
+
+          it("returns the title of the first album", async () => {
+          axios.get.mockResolvedValue({
+          data: [
+          {
+          userId: 1,
+          id: 1,
+          title: "My First Album",
+          },
+          {
+         userId: 1,
+         id: 2,
+         title: "Album: The Sequel",
+         },
+        ],
+        });
+
+        const title = await getFirstAlbumTitle();
+        expect(title).toEqual("My First Album");
+        });
+     
+ * This sets the default value to return whenever the method is called. Simply put: you can make axios.get() return whatever you want
       
   **Mock implementations**
       
@@ -135,8 +169,13 @@ forEach.test.js:
 
 * more mock functions: https://jestjs.io/docs/expect
 
-
 ### 3. Test Node.js Backends
+     
+### 4. Test Node.js Backends
+     
+### 5. Test Node.js Backends
+
+### 6. Test Node.js Backends
 
 * Testing pure functions is one of the nicest things that you can do because pure functions are pretty simple to test
 * to run the test run "npm t"
