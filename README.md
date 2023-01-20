@@ -2,14 +2,11 @@
 
 ### 1.Fundamentals of Testing in JavaScript
 
-**jest**-
+* **automated** -is a code that throws an error when the actual result of something does not match the expected output
 
-     jest --watch #runs jest -o by default
-     jest --watchAll #runs all tests
+Example: 
 
-**automated test**-code that throws an error when the actual result of something does not match expected output
-
-      const sum = (a, b) => a - b
+     const sum = (a, b) => a - b
       result = sum(7, 3)
       expected = 10
       
@@ -17,6 +14,26 @@
        throw new Error(`${result} is not equal to ${expected}`)
       }
 
+* the above code will throw an error because the expected value is not correct,you will get -4 is not equal to 10
+* if you change   const sum = (a, b) => a - b to   const sum = (a, b) => a + b, then the script will pass without throwing an error
+* The Javascript testing framework is to make that error message as useful as possible so we can quickly identify what the problem is and fix it.
+* A testing framework's job is to help developers identify what's broken as quickly as possible
+
+### 2. Javascript mocking fundamentals
+
+* Jest- is a JavaScript-based framework for testing React, React Native and other JavaScript-based applications.
+* In many cases, unit tests don't provide accurate results when run on the frontend of any software.
+* Jest reduces this issue by allowing you to write faster, more effective front-end tests.
+
+**To install jest**
+* npm install --save-dev jest
+
+**runs jest -o by default**
+  * jest --watch 
+
+**runs all tests**
+  * jest --watchAll 
+     
 **Jest matches**
 
 * **expect:** gives you access to a number of "matchers" that let you validate different things.
@@ -25,44 +42,75 @@
 * **toBeLessThan:** to compare received < expected for number or big integer values
 * more information about the matches: https://jestjs.io/docs/expect
 
-**testing framework's** job is to help developers identify what's been broken as quickly as possible
-
 **npx jest**-will automatically pick up jest.test.js file based of that convention
 
 **npx jest**is good because it will show you really helpful error messages and even code frame to show us exactly where our code thar error was been thrown
 
+Sum function:
+ 
+       function sum(a, b) {
+       return a + b;
+       }
+      module.exports = sum;
+      
+Testing the sum function:
 
-**A callback**is a function passed as an argument to another function
+       const sum = require('./sum');
 
-**example**
+       test('adds 1 + 2 to equal 3', () => {
+       expect(sum(1, 2)).toBe(3);
+        });
+        
+Add the following section to your package.json:
 
-         function greeting(name) {
-          alert(`Hello, ${name}`);
+         {
+            "scripts": {
+            "test": "jest"
+             }
          }
+         
+Finally, run yarn test or npm test and Jest will print this message:
 
-      function processUserInput(callback) {
-       const name = prompt("Please enter your name.");
-       callback(name);
-        }
-
-      processUserInput(greeting);
-      
-      
-  ### 2. Javascript mocking fundamentals
-  
-  **mocking** -is. also about creating faster and simpler tests
+          PASS  ./sum.test.js
+          ✓ adds 1 + 2 to equal 3 (5ms)
+          
+  **mocking** -is also about creating faster and simpler tests
   
  * to mock the entire module you use jest.mock(1st argument is the path to the module that you are mocking and the 2nd argument is the module factory. function that will return the mocked version of the module
-    * Example: 
-    
-          banana.js //file name
-          module.exports = () => 'banana';
-          
+
+forEach.js: 
+
+         export function forEach(items, callback) {
+         for (let index = 0; index < items.length; index++) {
+         callback(items[index]);
+           }
+         }
          
-          __tests__/test.js // test file name
-          jest.mock('../banana');
-          const banana = require('../banana'); // banana will be explicitly mocked.
-          banana(); // will return 'undefined' because the function is auto-mocked.
+* To test this function, we can use a mock function, and inspect the mock's state to ensure the callback is invoked as expected.
+
+forEach.test.js:
+
+        const forEach = require('./forEach');
+
+        const mockCallback = jest.fn(x => 42 + x);
+
+        test('forEach mock function', () => {
+        forEach([0, 1], mockCallback);
+
+        // The mock function was called twice
+        expect(mockCallback.mock.calls).toHaveLength(2);
+
+        // The first argument of the first call to the function was 0
+        expect(mockCallback.mock.calls[0][0]).toBe(0);
+
+       // The first argument of the second call to the function was 1
+       expect(mockCallback.mock.calls[1][0]).toBe(1);
+
+       // The return value of the first call to the function was 42
+       expect(mockCallback.mock.results[0].value).toBe(42);
+       });
+
+
           
  * jest allows you to externalize your mock by using __mocks__ directort which jest can load automatically
  
