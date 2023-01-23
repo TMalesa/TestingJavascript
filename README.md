@@ -155,7 +155,8 @@ forEach.test.js:
  * This sets the default value to return whenever the method is called. Simply put: you can make axios.get() return whatever you want
       
   **Mock implementations**
-      
+ 
+ * **mockImplementation**-Accepts a function that should be used as the implementation of the mock. The mock itself will still record all calls that go into and instances that come from itself – the only difference is that the implementation will also be executed when the mock is called.
   * **mockReset()**-This is useful when you want to completely reset a mock back to its initial state
   * **mockRestore()**- This is useful when you want to mock functions in certain test cases and restore the original implementation in others
       
@@ -367,3 +368,61 @@ Function: error-middleware.js
               expect(res.status).not.toHaveBeenCalled();
               expect(res.json).not.toHaveBeenCalled();
               });
+
+**Improve Test Maintainability using the Test Object Factory Pattern**
+     
+     * we’ll apply the object factory pattern to reduce duplication and make it easier to maintain our tests.
+     
+     Example: Reducing duplication on the previous test
+     
+           function buildRes(overrides) {
+            const res = {
+            json: jest.fn(() => res),
+            status: jest.fn(() => res),
+            ...overrides
+            };
+            return res;
+            }
+     
+      Testing :error-middleware.exercise.js
+            
+         import {UnauthorizedError} from 'express-jwt'
+         import `errorMiddleware` from '../error-middleware'
+          test("responds with 401 for express-jwt UnauthorizedError", () => {
+          const req = {};
+           const next = jest.fn();
+          **const res = buildRes();**
+            const code="some_error_code",
+            const message= "some message"
+            const error = new UnauthorizedError("some_error_code", {message});
+             errorMiddleware(error, req, res, next);
+             expect(next).not.toHaveBeenCalled();
+             expect(res.json).toHaveBeenCalledWith({
+             code:error.code,
+              message: error.message})
+              expect(res.status).toHaveBeenCalledWith(401);
+              expect(res.status).toHaveBeenCalledTimes(1);
+              expect(res.json).toHaveBeenCalledTimes(1);
+              });
+         
+      Testing :error-middleware.exercise.js
+         
+         import `errorMiddleware` from '../error-middleware'
+          test("call next if header is true", () => {
+          const req = {};
+           const next = jest.fn();
+           **const res = buildRes({headerset: true});**
+            const error = new Error("blah");
+             errorMiddleware(error, req, res, next);
+             expect(next).toHaveBeenCalledWith(error);
+             expect(next).toHaveBeenCalled(1);
+              expect(res.status).not.toHaveBeenCalled();
+              expect(res.json).not.toHaveBeenCalled();
+              });
+     
+ * we created this buildRes function that accepts some overrides. It creates our normal response object, and then spreads the overrides over the properties of this default response object that we are creating.
+     
+ **Test Node Controllers**
+     
+ * Controllers are a collection of middleware that applies business logic specific to your domain. 
+ * Typically these are tested like any other middleware, but often they require mocking the database for unit tests.
