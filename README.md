@@ -425,4 +425,21 @@ Function: error-middleware.js
  **Test Node Controllers**
      
  * Controllers are a collection of middleware that applies business logic specific to your domain. 
+     
+     Example: list-items-controller.js
+     
+             import * as listItemsDB from "../db/list-items";
+             import * as booksDB from "../db/books";
+            
+             async function getListItem(req, res) {
+             res.json({ listItem: await expandBookData(req.listItem) });
+             }
+     
+     
+     Test:ist-items-controller.exercise.js
+     
+               test("getListItem returns the req.listItem", async () => {});
+     
+     
+            
  * Typically these are tested like any other middleware, but often they require mocking the database for unit tests.
