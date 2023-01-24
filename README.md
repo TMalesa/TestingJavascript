@@ -174,7 +174,9 @@ forEach.test.js:
      
 ### 4. Test Node.js Backends
      
-### 5. Test Node.js Backends
+### 5. Test Accessibility of Rendered React Components with jest-axe
+     
+     **Test React Components with Jest and React Testing Library**
 
 ### 6. Test Node.js Backends
 
@@ -441,5 +443,125 @@ Function: error-middleware.js
                test("getListItem returns the req.listItem", async () => {});
      
      
+ * expandBookData it's going to make a call to the books DB. It's going to read by ID the listItem.bookId
+ 
+ * calls is an array of arrays. The first array is all of the calls. The second array, the internal array, is the arguments for that particular call.
             
  * Typically these are tested like any other middleware, but often they require mocking the database for unit tests.
+     
+ * jest.clearAllMocks()- Clears the mock.calls, mock.instances, mock.contexts and mock.results properties of all mocks. Equivalent to calling .mockClear() on every mocked function.
+     
+**Test Authentication API Routes Overview**
+     
+ * we're going to be testing authentication API routes. This is going to be doing minimum mocking and faking as possible. 
+ * We're going to be making real HTTP requests with our full server, we're going to be using the real database, and to simplify things for this workshop, our database is running in memory.
+     
+     getRouter.js
+            import express from "express";
+            import getAuthRouter from "./auth";
+            import getListItemsRoutes from "./list-items";
+
+             function getRouter() {
+             const router = express.Router();
+             router.use("/auth", getAuthRouter());
+             router.use("/list-items", getListItemsRoutes());
+             return router;
+             }
+
+            export default getRouter;
+     
+     * getRouter is an Express router, and it's using the auth router for the auth routes.
+     
+     
+            auth.js
+            import express from "express";
+            import { authMiddleware } from "../utils/auth";
+            import * as authController from "./auth-controller";
+
+            function getAuthRoutes() {
+            const router = express.Router();
+
+            router.post("/register", authController.register);
+            router.post("/login", authController.login);
+            router.get("/me", authMiddleware, authController.me);
+
+            return router;
+            }
+
+            export default getAuthRoutes;
+     
+     * Here's our getAuthRouter. We have register, login, and me route. This is the authController.register, authController.login, and authController.me.
+     
+     **Start a Node Server and Fire a Request to an HTTP API Endpoint**
+     
+              let server;
+              beforeAll(async () => {
+              server = await startServer({ port: 8000 });
+              });
+             afterAll(async () => await server.close());
+     
+     
+     
+             test('auth flow', async () => {
+             const {username, password} = generate.loginForm()
+
+            // register
+            const response = await axios.post('http://localhost:8000/api/auth/register', {
+            username,
+            password,
+            })
+
+           console.log(response.data)
+     
+     **Make Assertions on HTTP API Responses for Registration**
+     
+          auth.exercise.js:
+     
+            test("auth flow", async () => {
+            const { username, password } = generate.loginForm();
+
+            // register
+            const response = await axios.post("http://localhost:8000/api/auth/register", {
+            username,
+            password
+            });
+
+            expect(response.data.user).toEqual({
+            token: expect.any(String)
+            id: expect.any(String),
+            username
+            });
+            });
+     
+     * we generated the login form, made the request, and then expected the response.data.user toEqual an object that has a token that is a string, an id that is a string, and a username that is the same as the username we provided when we registered.
+     
+     **Test the Login Endpoint for a Node Server**
+     
+        auth.exercise.js
+               test("auth flow", async () => {
+               const { username, password } = generate.loginForm();
+
+              // register
+             const response = await axios.post("http://localhost:8000/api/auth/register", {
+             username,
+             password
+             });
+
+            expect(response.data.user).toEqual({
+            token: expect.any(String),
+            id: expect.any(String),
+            username
+            });
+
+            // login
+            const lResult = await axios.post("http://localhost:8000/api/auth/login", {
+            username,
+            password
+            });
+            expect(lResult.data.user).toEqual(rResult.data.user);
+            });
+
+* We updated the endpoint so that it was a login instead of registration. We're still passing the same username and password. We're getting the result here, the login results. We're comparing the login result with the registration result and making sure those two are equa
+     
+     
+ 
