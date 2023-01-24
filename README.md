@@ -172,12 +172,39 @@ forEach.test.js:
 
 ### 3. Test Node.js Backends
      
-### 4. Test Node.js Backends
+### 4. Install, Configure, and Script Cypress for JavaScript Web Applications
+     
+     *nstall and Run Cypress
+     
+     import '@testing-library/cypress/add-commands'
      
 ### 5. Test Accessibility of Rendered React Components with jest-axe
      
-     **Test React Components with Jest and React Testing Library**
+**Render a React Component for Testing**
+     
+     * using ReactDOM to render a simple React component to a <div> we create ourselves and assert that it’s rendering the right thing based on the props we provide.
+     
+     
+     react-dom.js
+          import React from 'react'
+          import {FavoriteNumber} from '../favorite-number'
 
+         test('renders a number input with a label "Favorite Number"', () => {
+         <FavoriteNumber />
+         })
+
+     
+        Test
+     
+           import ReactDOM from 'react-dom'
+
+           test('renders a number input with a label "Favorite Number"', () => {
+           const div = document.createElement('div')
+           ReactDOM.render(<FavoriteNumber />, div)
+           expect(div.querySelector('input').type).toBe('number')
+           expect(div.querySelector('label').textContent).toBe('Favorite Number'))
+           })
+     
 ### 6. Test Node.js Backends
 
 * Testing pure functions is one of the nicest things that you can do because pure functions are pretty simple to test
